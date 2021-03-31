@@ -34,29 +34,9 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 version_txt = os.path.join(cwd, 'version.txt')
 with open(version_txt, 'r') as f:
     version = f.readline().strip()
-sha = 'Unknown'
+    cuda_version = 'cu' + torch.version.cuda.replace('.', '')
+    version = version + '+' + cuda_version
 package_name = 'torchvision'
-
-try:
-    sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=cwd).decode('ascii').strip()
-except Exception:
-    pass
-
-if os.getenv('BUILD_VERSION'):
-    version = os.getenv('BUILD_VERSION')
-elif sha != 'Unknown':
-    version += '+' + sha[:7]
-
-
-def write_version_file():
-    version_path = os.path.join(cwd, 'torchvision', 'version.py')
-    with open(version_path, 'w') as f:
-        f.write("__version__ = '{}'\n".format(version))
-        f.write("git_version = {}\n".format(repr(sha)))
-        f.write("from torchvision.extension import _check_cuda_version\n")
-        f.write("if _check_cuda_version() > 0:\n")
-        f.write("    cuda = _check_cuda_version()\n")
-
 
 pytorch_dep = 'torch'
 if os.getenv('PYTORCH_VERSION'):
@@ -442,8 +422,6 @@ class clean(distutils.command.clean.clean):
 
 if __name__ == "__main__":
     print("Building wheel {}-{}".format(package_name, version))
-
-    write_version_file()
 
     with open('README.rst') as f:
         readme = f.read()
